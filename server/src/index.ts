@@ -7,6 +7,8 @@ import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
 
+import fs from "fs-extra";
+
 // setup
 const app = express();
 
@@ -26,6 +28,7 @@ app.use(
 
 // handle server routes
 import apiRouter from "./routes/api";
+import { fstat } from "fs";
 app.use("/api", apiRouter);
 
 // serve react app (production)
