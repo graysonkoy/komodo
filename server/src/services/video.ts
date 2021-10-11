@@ -28,7 +28,7 @@ export async function combineClips(clipList: Array<string>) {
 		});
 	};
 
-	await write(path.join(__dirname, "../../clips/output/mergedVideo.mp4"));
+	await write(path.join(__dirname, "../output/mergedVideo.mp4"));
 
 	console.log("Done");
 }

@@ -5,6 +5,6 @@ import * as videoController from "../controllers/videoController";
 
 const apiRouter = express.Router();
 
-apiRouter.get("/test", query("clips").isArray(), videoController.makeVideo);
+apiRouter.get("/makeVideo", videoController.makeVideo);
 
 export default apiRouter;
