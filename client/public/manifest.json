@@ -1,0 +1,15 @@
+{
+	"short_name": "Artist Finder",
+	"name": "Artist Finder",
+	"icons": [
+		{
+			"src": "icon.svg",
+			"type": "image/svg",
+			"sizes": "any"
+		}
+	],
+	"start_url": ".",
+	"display": "standalone",
+	"theme_color": "#cfdbd5",
+	"background_color": "#242423"
+}
