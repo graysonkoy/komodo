@@ -26,6 +26,8 @@ app.use(
 
 // handle server routes
 import apiRouter from "./routes/api";
+import { getVideo } from "./services/ytubedl";
+import { getClipInfo } from "./services/twitchApi";
 app.use("/api", apiRouter);
 
 // serve react app (production)
@@ -69,3 +71,6 @@ app
 	.on("error", (e) => {
 		console.log(`Fatal error: ${e.message}`);
 	});
+
+//getVideo('https://www.twitch.tv/alfie/clip/TrappedRepleteEyeballWow-VQ61xf5HnKzxdQxV', 'SLUG');
+getClipInfo('https://www.twitch.tv/alfie/clip/TrappedRepleteEyeballWow-VQ61xf5HnKzxdQxV')
