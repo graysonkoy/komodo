@@ -8,6 +8,7 @@ async function exec(command) {
 		const child = child_process.exec(command);
 
 		child.stdout.pipe(process.stdout);
+		child.stderr.pipe(process.stderr);
 
 		child.on("exit", () => resolve());
 		child.on("error", () => reject());
@@ -30,7 +31,9 @@ export async function combineClips(clipList: Array<string>) {
 		clipList.map((filename) => `file '${filename}'`).join("\n")
 	);
 
-	await exec(`ffmpeg -safe 0 -f concat -i ${clipsFilename} ${mergedFilename}`);
+	await exec(
+		`ffmpeg -safe 0 -f concat -i ${clipsFilename} -preset ultrafast ${mergedFilename}`
+	);
 
 	await fs.remove(clipsFilename);
 
