@@ -42,39 +42,6 @@ export async function combineClips(videos) {
 		titleFontFile: "fonts/OpenSans-Bold.ttf",
 	};
 
-	const filters = [];
-	for await (const video of videos) {
-		const clipTitleFilter = [
-			`drawtext=enable='between(t,0,${subtitleOptions.duration})'`,
-			`fontfile=${subtitleOptions.titleFontFile}`,
-			`text='${escape(video.info.title)}'`,
-			`fontcolor=white`,
-			`fontsize=${subtitleOptions.fontSize}`,
-			`box=1`,
-			`boxcolor=black@${subtitleOptions.backgroundOpacity}`,
-			`boxborderw=${subtitleOptions.backgroundPadding}`,
-			`x=${subtitleOptions.cornerGap}`,
-			`y=(h-text_h)-${subtitleOptions.cornerGap}-${
-				subtitleOptions.backgroundPadding * 2
-			}-${subtitleOptions.lineGap}`,
-		].join(":");
-
-		const streamerNameFilter = [
-			`drawtext=enable='between(t,0,${subtitleOptions.duration})'`,
-			`fontfile=${subtitleOptions.fontFile}`,
-			`text='${escape(video.info.broadcaster_name)}'`,
-			`fontcolor=white@1`,
-			`fontsize=${subtitleOptions.fontSize}`,
-			`box=1`,
-			`boxcolor=black@${subtitleOptions.backgroundOpacity}`,
-			`boxborderw=${subtitleOptions.backgroundPadding}`,
-			`x=${subtitleOptions.cornerGap}`,
-			`y=(h-text_h)-${subtitleOptions.cornerGap}`,
-		].join(":");
-
-		filters.push([clipTitleFilter, streamerNameFilter].join(","));
-	}
-
 	const runFfmpeg = () => {
 		return new Promise<void>((resolve, reject) => {
 			let proc = ffmpeg();
