@@ -1,4 +1,3 @@
-import fs from "fs-extra";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 

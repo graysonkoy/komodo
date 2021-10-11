@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export async function getClipInfo(urls) {
     
@@ -8,10 +8,10 @@ export async function getClipInfo(urls) {
     })
     
     const request = await axios.get(`https://api.twitch.tv/helix/clips?id=${slugs}`, {
-        'headers': {
-            'Authorization': 'Bearer bcr0eunhgshp3ipnb53xp76zmu886i',
-            'Client-ID': 'd2ifygin4g8nfaw25qx22j2r470gkc'
-        }
+        headers: {
+            Authorization: `Bearer ${process.env.TWITCH_ACCESS_TOKEN}`,
+            "Client-ID": `${process.env.TWITCH_CLIENT_ID}`,
+        },
     });
 
     if(request.data.data.length !== urls.length) throw 'clip doesnt exist';

@@ -1,12 +1,11 @@
 import "dotenv/config";
-
 import express, { NextFunction, Request, Response } from "express";
-import "express-async-errors";
-
 import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
+import "express-async-errors";
 
+import db from "./services/mongo";
 
 // setup
 const app = express();
@@ -27,7 +26,6 @@ app.use(
 
 // handle server routes
 import apiRouter from "./routes/api";
-
 app.use("/api", apiRouter);
 
 // serve react app (production)
@@ -64,10 +62,18 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 // start server
-app
-	.listen(port, () => {
-		console.log(`App started on port ${port} (${env})`);
-	})
-	.on("error", (e) => {
-		console.log(`Fatal error: ${e.message}`);
-	});
+async function start() {
+	// connect to the database
+	await db.connect();
+	console.log("Connected to database");
+
+	app
+		.listen(port, () => {
+			console.log(`App started on port ${port} (${env})`);
+		})
+		.on("error", (e) => {
+			console.log(`Fatal error: ${e.message}`);
+		});
+}
+
+start();
