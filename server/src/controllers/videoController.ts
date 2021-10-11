@@ -16,88 +16,100 @@ async function getClipInfos(urls) {
 		unavailableSlugs = [];
 
 	// get information from mongo if possible
-	for await (const slug of slugs) {
-		const info = await db.getClipData(slug);
-		if (info) {
-			clipInfos.push({
-				source: "mongo",
-				slug,
-				info,
-			});
-		} else {
-			// need to get information from twitch
-			unavailableSlugs.push(slug);
-		}
-	}
+	await Promise.all(
+		slugs.map(async (slug) => {
+			const info = await db.getClipData(slug);
+			if (info) {
+				console.log(`Got info for clip '${slug}' from Mongo`);
+
+				clipInfos.push({
+					source: "mongo",
+					slug,
+					info,
+				});
+			} else {
+				// need to get information from twitch
+				unavailableSlugs.push(slug);
+			}
+		})
+	);
 
 	// get unavailable information from the twitch api
 	if (unavailableSlugs.length != 0) {
 		const infos = await getClipInfo(unavailableSlugs);
 
-		for await (const info of infos) {
-			// store in mongo
-			await db.storeClipData(info.id, info);
-			console.log(`Added information for clip ${info.id} to mongo`);
+		await Promise.all(
+			infos.map(async (info) => {
+				// store in mongo
+				await db.storeClipData(info.id, info);
+				console.log(`Added information for clip ${info.id} to mongo`);
 
-			clipInfos.push({
-				source: "twitch",
-				slug: info.id,
-				info,
-			});
-		}
+				clipInfos.push({
+					source: "twitch",
+					slug: info.id,
+					info,
+				});
+			})
+		);
 	}
 
 	return clipInfos;
 }
 
 async function getVideos(clipInfos) {
-	for await (let clip of clipInfos) {
-		clip.filename = path.join(
-			__dirname,
-			`../../clips/downloaded/${clip.slug}.mp4`
-		);
+	await Promise.all(
+		clipInfos.map(async (clip) => {
+			clip.filename = path.join(
+				__dirname,
+				`../../clips/downloaded/${clip.slug}.mp4`
+			);
 
-		if (clip.source == "mongo") {
-			// got the clip from mongo, check if it's downloaded in S3 already
-			const video = await s3.getVideo(clip.slug);
-			if (video) {
-				await fs.writeFile(clip.filename, video);
-				console.log(`Got video '${clip.slug}' from s3`);
-				continue;
+			if (fs.existsSync(clip.filename)) return;
+
+			if (clip.source == "mongo") {
+				// got the clip from mongo, check if it's downloaded in S3 already
+				const video = await s3.getVideo(clip.slug);
+				if (video) {
+					await fs.writeFile(clip.filename, video);
+					console.log(`Got video '${clip.slug}' from S3`);
+					return;
+				}
 			}
-		}
 
-		// didn't get the video from S3, download & store it
-		console.log(`Getting video '${clip.slug}' from Twitch`);
-		const filename = await getVideo(clip.info.url, clip.filename);
+			// didn't get the video from S3, download & store it
+			console.log(`Getting video '${clip.slug}' from Twitch`);
+			const filename = await getVideo(clip.info.url, clip.filename);
 
-		await s3.storeVideo(clip.slug, filename);
-		console.log(`Uploaded video '${clip.slug}' to S3`);
-	}
+			await s3.storeVideo(clip.slug, filename);
+			console.log(`Uploaded video '${clip.slug}' to S3`);
+		})
+	);
 
-	return clipInfos.map((clip) => clip.filename);
+	return clipInfos;
 }
 
 export async function makeVideo(req, res) {
-	try {
-		const clips = JSON.parse(req.query.clips);
+	const clips = JSON.parse(req.query.clips);
 
-		const clipInfos = await getClipInfos(clips);
+	console.log("Getting clip informations");
+	const clipInfos = await getClipInfos(clips);
+	console.log("Done getting clip informations");
 
-		const videoFilenames = await getVideos(clipInfos);
+	console.log("Getting videos");
+	const videos = await getVideos(clipInfos);
+	console.log("Done getting videos");
 
-		const mergedFilename = await combineClips(videoFilenames);
+	console.log("Merging clips");
+	const mergedFilename = await combineClips(videos);
+	console.log("Done merging");
 
-		console.log("Sending video");
-		res.sendFile(mergedFilename);
+	await res.sendFile(mergedFilename);
 
-		for await (const filename of videoFilenames) {
-			await fs.remove(filename);
-		}
-
-		await fs.remove(mergedFilename);
-	} catch (error) {
-		console.error(error);
-		throw `Failed to get a video`;
+	// delete videos
+	for await (const video of videos) {
+		await fs.remove(video.filename);
 	}
+
+	// delete merged video
+	await fs.remove(mergedFilename);
 }

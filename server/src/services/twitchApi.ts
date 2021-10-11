@@ -16,6 +16,8 @@ export async function getClipInfo(slugs) {
 		}
 	);
 
-	if (request.data.data.length !== slugs.length) throw "Clip doesnt exist";
+	if (request.data.data.length !== slugs.length)
+		throw "One or more clips failed to load";
+
 	return request.data.data;
 }

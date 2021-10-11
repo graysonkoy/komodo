@@ -1,5 +1,4 @@
 import express from "express";
-import { query } from "express-validator";
 
 import * as videoController from "../controllers/videoController";
 
