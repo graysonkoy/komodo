@@ -1,33 +1,38 @@
-import ffmpeg from "fluent-ffmpeg";
+import fs from "fs-extra";
 import path from "path";
+import randomString from "../util/randomString";
+import child_process from "child_process";
+
+async function exec(command) {
+	return new Promise<void>((resolve, reject) => {
+		const child = child_process.exec(command);
+
+		child.stdout.pipe(process.stdout);
+
+		child.on("exit", () => resolve());
+		child.on("error", () => reject());
+	});
+}
 
 export async function combineClips(clipList: Array<string>) {
 	if (clipList.length == 0) throw "No clips provided";
 
-	// const filenames = clipList.map(clip => clip);
-	const filenames = clipList;
+	const id = randomString();
 
-	let mergedVideo = ffmpeg();
+	const mergedFilename = path.join(__dirname, `../../clips/merged/${id}.mp4`);
+	const clipsFilename = path.join(
+		__dirname,
+		`../../clips/downloaded/clips-${id}.txt`
+	);
 
-	// add all of the clips
-	filenames.forEach((file) => {
-		mergedVideo = mergedVideo.input(file);
-	});
+	await fs.writeFile(
+		clipsFilename,
+		clipList.map((filename) => `file '${filename}'`).join("\n")
+	);
 
-	const write = (outputFilename: string) => {
-		return new Promise((resolve, reject) => {
-			mergedVideo
-				.on("end", () => resolve(outputFilename))
-				.on("progress", (progress) => console.log(progress))
-				.on("error", (err) => {
-					console.log(err);
-					throw err.message;
-				})
-				.mergeToFile(outputFilename);
-		});
-	};
+	await exec(`ffmpeg -safe 0 -f concat -i ${clipsFilename} ${mergedFilename}`);
 
-	await write(path.join(__dirname, "../output/mergedVideo.mp4"));
+	await fs.remove(clipsFilename);
 
-	console.log("Done");
+	return mergedFilename;
 }

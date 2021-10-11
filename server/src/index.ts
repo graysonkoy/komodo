@@ -3,9 +3,11 @@ import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
+import fs from "fs-extra";
 import "express-async-errors";
 
 import db from "./services/mongo";
+import s3 from "./services/s3";
 
 // setup
 const app = express();
@@ -63,9 +65,16 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // start server
 async function start() {
+	await fs.ensureDir(path.join(__dirname, "../clips/"));
+	await fs.ensureDir(path.join(__dirname, "../clips/downloaded/"));
+	await fs.ensureDir(path.join(__dirname, "../clips/merged/"));
+
 	// connect to the database
 	await db.connect();
-	console.log("Connected to database");
+	console.log("Connected to MongoDB");
+
+	await s3.connect();
+	console.log("Connected to S3");
 
 	app
 		.listen(port, () => {
