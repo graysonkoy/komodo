@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export function extractSlug(url) {
-	if (!url.includes("https://www.twitch.tv/")) throw "Invalid clip url";
+	if (!url.includes("twitch.tv")) throw "Invalid clip url";
 	return url.split("/").pop();
 }
 

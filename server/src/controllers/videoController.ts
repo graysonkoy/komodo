@@ -28,8 +28,9 @@ export async function getVideos(clipInfos) {
 			}
 
 			// didn't get the video from S3, download & store it
-			console.log(`Getting video '${clip.slug}' from Twitch`);
+			console.log(`Downloading video '${clip.slug}' from Twitch`);
 			const filename = await downloadVideo(clip.info.url, clip.filename);
+			console.log(`Downloaded video '${clip.slug}' from Twitch`);
 
 			await s3.storeVideo(clip.slug, filename);
 			console.log(`Uploaded video '${clip.slug}' to S3`);

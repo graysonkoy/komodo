@@ -65,9 +65,12 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // start server
 async function start() {
-	await fs.ensureDir(path.join(__dirname, "../clips/"));
-	await fs.ensureDir(path.join(__dirname, "../clips/downloaded/"));
-	await fs.ensureDir(path.join(__dirname, "../clips/merged/"));
+	// clear clips
+	await fs.remove(path.join(__dirname, "../clips"));
+
+	// create clip folders
+	await fs.ensureDir(path.join(__dirname, "../clips/downloaded"));
+	await fs.ensureDir(path.join(__dirname, "../clips/merged"));
 
 	// connect to the database
 	await db.connect();
