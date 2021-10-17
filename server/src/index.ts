@@ -8,16 +8,14 @@ import "express-async-errors";
 
 import db from "./services/mongo";
 import s3 from "./services/s3";
-
 import apiRouter from "./routes/api";
-
 import statusCodes from "./util/statusCodes";
 
 // setup
 const app = express();
-
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || "development";
+  
 
 // middlewares
 app.use(express.urlencoded({ extended: true }));
