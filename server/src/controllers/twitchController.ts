@@ -49,6 +49,16 @@ export async function getClipInfos(urls) {
 	return clipInfos;
 }
 
+export async function getSingleClipInfo(req, res) {
+	const { clip } = validateQuery(req);
+
+	const clipInfo = (await getClipInfos([clip]))[0];
+
+	return res.json({
+		data: clipInfo.info,
+	});
+}
+
 export async function getClips(req, res) {
 	const {
 		gameName,
@@ -57,18 +67,21 @@ export async function getClips(req, res) {
 		clips,
 	} = validateQuery(req);
 
+	if (!gameName && !streamerName)
+		throw "A gameName or streamerName is required.";
+	else if (gameName && streamerName)
+		throw "Only a gameName or a streamerName can be provided, not both.";
+
 	// todo: remove this, use validator
 	let startDate;
-	try {
+	if (startDateString) {
+		if (!Date.parse(startDateString)) throw "Invalid start date";
 		startDate = new Date(startDateString);
-	} catch (e) {
-		throw "Invalid start date";
 	}
-
-	if (gameName && streamerName)
-		throw "Only a gameName or a streamerName can be provided, not both. Twitch's fault.";
 
 	const clipInfos = await getTopClips(gameName, streamerName, startDate, clips);
 
-	return res.json(clipInfos);
+	return res.json({
+		data: clipInfos,
+	});
 }

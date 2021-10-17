@@ -1,11 +1,6 @@
 import React, { ReactElement, useContext } from "react";
-import { Snackbar } from "@material-ui/core";
-import MuiAlert, { AlertProps } from "@material-ui/lab/Alert";
+import { Alert, Snackbar } from "@mui/material";
 import MessageContext from "../../context/MessageContext";
-
-const Alert = (props: AlertProps): ReactElement => {
-	return <MuiAlert elevation={6} variant="filled" {...props} />;
-};
 
 const MessageBar = (): ReactElement => {
 	const { message, setOpen, open } = useContext(MessageContext);
@@ -22,7 +17,12 @@ const MessageBar = (): ReactElement => {
 				onClose={closeMessage}
 				anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
 			>
-				<Alert onClose={closeMessage} severity={message?.type}>
+				<Alert
+					elevation={6}
+					variant="filled"
+					onClose={closeMessage}
+					severity={message?.type}
+				>
 					{message?.message}
 				</Alert>
 			</Snackbar>

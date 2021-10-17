@@ -1,5 +1,5 @@
 import express from "express";
-import { query } from "express-validator";
+import { oneOf, query } from "express-validator";
 
 import * as videoController from "../controllers/videoController";
 import * as twitchController from "../controllers/twitchController";
@@ -13,6 +13,12 @@ apiRouter.get(
 	query("startDate").optional(), // todo: isDate
 	query("clips").optional().isInt({ min: 1, max: 100 }).default(20),
 	twitchController.getClips
+);
+
+apiRouter.get(
+	"/getClipInfo",
+	query("clip").isString(),
+	twitchController.getSingleClipInfo
 );
 
 apiRouter.get("/makeVideo", query("clips"), videoController.makeVideo);

@@ -1,4 +1,15 @@
-@import url("https://fonts.googleapis.com/css?family=Inter:regular,bold,italic");
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	font-weight: bold;
+	src: url("./fonts/PlusJakartaSans-Bold.woff2") format("woff2"),
+		url("./fonts/PlusJakartaSans-Bold.woff") format("woff");
+}
+
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	src: url("./fonts/PlusJakartaSans-Regular.woff2") format("woff2"),
+		url("./fonts/PlusJakartaSans-Regular.woff") format("woff");
+}
 
 .App {
 	background-color: var(--background-colour);
@@ -11,6 +22,10 @@
 	transition: color 0.1s, background-color 0.2s;
 }
 
+body {
+	margin: 0;
+}
+
 main {
 	padding: 3rem 5rem;
 
@@ -20,12 +35,7 @@ main {
 }
 
 * {
-	font-family: Inter;
-}
-
-.leaflet-container {
-	width: 100%;
-	height: 100%;
+	font-family: "Plus Jakarta Sans", "Helvetica", sans-serif;
 }
 
 .hidden {
@@ -45,6 +55,10 @@ h6 {
 a {
 	color: inherit;
 	text-decoration: none;
+}
+
+.muted {
+	opacity: 0.8;
 }
 
 // material ui links

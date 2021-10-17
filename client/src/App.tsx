@@ -8,24 +8,27 @@ import Home from "./pages/Home/Home";
 
 import "./styles/variables.scss";
 import "./App.scss";
+import { ThemeStore } from "./context/ThemeContext";
 
 const App = (): ReactElement => {
 	return (
 		<div className="App">
 			<Router>
-				<MessageStore>
-					<ApiStore>
-						<Navbar />
+				<ThemeStore>
+					<MessageStore>
+						<ApiStore>
+							<Navbar />
 
-						<main>
-							<Switch>
-								<Route exact path="/" component={Home} />
-							</Switch>
-						</main>
+							<main>
+								<Switch>
+									<Route exact path="/" component={Home} />
+								</Switch>
+							</main>
 
-						<MessageBar />
-					</ApiStore>
-				</MessageStore>
+							<MessageBar />
+						</ApiStore>
+					</MessageStore>
+				</ThemeStore>
 			</Router>
 		</div>
 	);

@@ -1,5 +1,5 @@
+import { CircularProgress } from "@mui/material";
 import React, { ReactElement } from "react";
-import { CircularProgress } from "@material-ui/core";
 
 import "./Loader.scss";
 

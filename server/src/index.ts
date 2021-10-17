@@ -9,6 +9,10 @@ import "express-async-errors";
 import db from "./services/mongo";
 import s3 from "./services/s3";
 
+import apiRouter from "./routes/api";
+
+import statusCodes from "./util/statusCodes";
+
 // setup
 const app = express();
 
@@ -27,7 +31,6 @@ app.use(
 );
 
 // handle server routes
-import apiRouter from "./routes/api";
 app.use("/api", apiRouter);
 
 // serve react app (production)
@@ -43,7 +46,7 @@ if (env == "production") {
 // error handlers
 app.use((req: Request, res: Response, next: NextFunction) => {
 	// 404s
-	res.status(404).json({
+	res.status(statusCodes.NOT_FOUND).json({
 		error: true,
 		message: "Not Found",
 	});
@@ -52,7 +55,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 	// general
 	const dev = req.app.get("env") === "development";
-	const errStatus = err.status || 500;
+	const errStatus = err.status || statusCodes.INTERNAL_SERVER_ERROR;
 	const errMessage = dev
 		? err.message || err
 		: "An unexpected error has occurred, please try again later";
@@ -63,7 +66,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
-// start server
 async function start() {
 	// clear clips
 	await fs.remove(path.join(__dirname, "../clips"));
@@ -72,13 +74,15 @@ async function start() {
 	await fs.ensureDir(path.join(__dirname, "../clips/downloaded"));
 	await fs.ensureDir(path.join(__dirname, "../clips/merged"));
 
-	// connect to the database
+	// connect to MongoDB
 	await db.connect();
 	console.log("Connected to MongoDB");
 
+	// connect to S3
 	await s3.connect();
 	console.log("Connected to S3");
 
+	// start the server
 	app
 		.listen(port, () => {
 			console.log(`App started on port ${port} (${env})`);

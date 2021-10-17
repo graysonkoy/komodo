@@ -5,11 +5,11 @@ import React, {
 	SetStateAction,
 	useState,
 } from "react";
-import { Color } from "@material-ui/lab/Alert";
+import { AlertColor } from "@mui/material";
 
 export interface Message {
 	message: string;
-	type: Color;
+	type: AlertColor;
 }
 
 export interface MessageContextInterface {
