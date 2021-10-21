@@ -1,9 +1,26 @@
-.clips-list {
-	margin-bottom: 1rem;
-}
+.clips-page {
+	.clips-list {
+		margin-bottom: 1rem;
+	}
 
-.card-container {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-	gap: 1rem;
+	.card-container {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+		gap: 1rem;
+	}
+
+	.video-container {
+		margin-top: 1rem;
+
+		h2 {
+			margin-bottom: 0.5rem;
+		}
+
+		.video {
+			width: 100%;
+			max-width: 600px;
+
+			margin-bottom: 0.5rem;
+		}
+	}
 }

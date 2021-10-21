@@ -1,7 +1,7 @@
 import { extractSlug, getClipInfo, getTopClips } from "../services/twitch";
 import validateQuery from "../util/validateQuery";
 import db from "../services/mongo";
-import { checkRedis, addToRedis } from "../services/redis";
+import redis from "../services/redis";
 
 export async function getClipInfos(urls) {
 	const slugs = urls.map((url) => extractSlug(url));
@@ -12,28 +12,26 @@ export async function getClipInfos(urls) {
 	// get information from mongo if possible
 	await Promise.all(
 		slugs.map(async (slug) => {
-
 			let info;
 			let gotFromRedis = false;
 
 			// Check redis
-			info = await checkRedis(slug);
-			if(info) gotFromRedis = true;
+			info = await redis.checkRedis(slug);
+			if (info) gotFromRedis = true;
+			// Check mongo
+			else info = await db.getClipData(slug);
 
-			// Check mongo 
-			else info = await db.getClipData(slug); 
-			
 			// If information is found
 			if (info) {
-
-				console.log(`Got info for clip '${slug}' from somewhere`);
 				let source = "redis";
 
 				// If gotten from mongo add to redis
-				if(!gotFromRedis) {
-					addToRedis(slug, info);
-					source = "mongo"
+				if (!gotFromRedis) {
+					source = "mongo";
+					redis.addToRedis(slug, info);
 				}
+
+				console.log(`Got info for clip '${slug}' from ${source}`);
 
 				// Push to clips
 				clipInfos.push({
@@ -41,7 +39,6 @@ export async function getClipInfos(urls) {
 					slug,
 					info,
 				});
-
 			} else {
 				// need to get information from twitch
 				unavailableSlugs.push(slug);
@@ -51,14 +48,12 @@ export async function getClipInfos(urls) {
 
 	// get unavailable information from the twitch api
 	if (unavailableSlugs.length != 0) {
-
 		const infos = await getClipInfo(unavailableSlugs);
 		await Promise.all(
 			infos.map(async (info) => {
-
 				// store in mongo + redis
 				await db.storeClipData(info.id, info);
-				await addToRedis(info.id, info);
+				await redis.addToRedis(info.id, info);
 
 				console.log(`Added information for clip ${info.id} to mongo`);
 

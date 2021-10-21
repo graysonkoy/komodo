@@ -29,13 +29,45 @@ export async function combineClips(videos) {
 	const subtitleOptions = {
 		duration: 5,
 		fontSize: 45,
+		lineHeight: 25,
+		lineGap: 45,
 		cornerGap: 50,
 		backgroundOpacity: 0.5,
 		backgroundPadding: 17,
-		lineGap: 45,
 		fontFile: "fonts/PlusJakartaSans-Regular.ttf",
 		titleFontFile: "fonts/PlusJakartaSans-Bold.ttf",
+		fade: {
+			in: 0.2,
+			out: 0.5,
+		},
 	};
+
+	// prettier-ignore
+	const fadeString = `if(
+			lt(t,${subtitleOptions.fade.in}),
+			t/${subtitleOptions.fade.in},
+			if(
+				lt(t,${subtitleOptions.duration + subtitleOptions.fade.in}),
+				1,
+				if(
+					lt(t,${subtitleOptions.duration + subtitleOptions.fade.in + subtitleOptions.fade.out}),
+					(${subtitleOptions.fade.out}-(t-${subtitleOptions.duration + subtitleOptions.fade.in}))/${subtitleOptions.fade.out},
+					0
+				)
+			)
+		)`.replace(/\s/g,'');
+
+	function wrapString(str, width) {
+		return str
+			.replace(
+				new RegExp(
+					`(?:\\S(?:.{0,${width}}\\S)?(?:\\s+|-|$)|(?:\\S{${width}}))`,
+					"g"
+				),
+				(s) => `${s}\n`
+			)
+			.slice(0, -1);
+	}
 
 	const runFfmpeg = () => {
 		return new Promise<void>((resolve, reject) => {
@@ -48,14 +80,14 @@ export async function combineClips(videos) {
 			proc = proc.addOption(["-preset", "ultrafast"]);
 
 			// add filters
-			proc = proc.complexFilter(
-				[
-					// as far as i know you can't combine multiple filters in fluent-ffmpeg, so this is the best i could do.
-					...videos.map((video, i) => [
+			const filters = [
+				// as far as i know you can't combine multiple filters in fluent-ffmpeg, so this is the best i could do.
+				...videos
+					.map((video, i) => [
 						{
 							// set resolution
 							inputs: `[${i}:0]` /* this is the first filter, and it takes in the [:0] stream of a video, which is the video stream
-																		so essentially this code just means 'use the video portion of video i as input'*/,
+																	so essentially this code just means 'use the video portion of video i as input'*/,
 							filter: "scale",
 							options: videoOptions.resolution,
 							outputs: `[v${i}1]`, // we apply the filter to the input and then output it into a new stream, '[v{i}1]'.
@@ -63,7 +95,7 @@ export async function combineClips(videos) {
 						{
 							// set aspect ratio
 							inputs: `[v${i}1]` /* now, instead of using the video stream of the original clip as input,
-																		we're using the modified output video stream from the last filter */,
+																	we're using the modified output video stream from the last filter */,
 							filter: "setsar",
 							options: 1,
 							outputs: `[v${i}2]`, // and after applying this second filter we output it into another.
@@ -80,11 +112,17 @@ export async function combineClips(videos) {
 							inputs: `[v${i}3]`,
 							filter: "drawtext",
 							options: {
-								enable: `between(t,0,${subtitleOptions.duration})`,
+								enable: `between(t,0,${
+									subtitleOptions.duration +
+									subtitleOptions.fade.in +
+									subtitleOptions.fade.out
+								})`,
+								alpha: fadeString,
 								fontfile: subtitleOptions.fontFile,
 								text: video.info.broadcaster_name,
 								fontcolor: "white@1",
 								fontsize: subtitleOptions.fontSize,
+								line_spacing: subtitleOptions.lineHeight,
 								box: 1,
 								boxcolor: `black@${subtitleOptions.backgroundOpacity}`,
 								boxborderw: subtitleOptions.backgroundPadding,
@@ -98,11 +136,20 @@ export async function combineClips(videos) {
 							inputs: `[v${i}4]`,
 							filter: "drawtext",
 							options: {
-								enable: `between(t,0,${subtitleOptions.duration})`,
+								enable: `between(t,0,${
+									subtitleOptions.duration +
+									subtitleOptions.fade.in +
+									subtitleOptions.fade.out
+								})`,
+								alpha: fadeString,
 								fontfile: subtitleOptions.titleFontFile,
-								text: video.info.title.replace('"', '"'),
+								text: wrapString(
+									video.info.title.replace('"', '\\"').replace("'", "\u2019"),
+									30
+								),
 								fontcolor: "white@1",
 								fontsize: subtitleOptions.fontSize,
+								line_spacing: subtitleOptions.lineHeight,
 								box: 1,
 								boxcolor: `black@${subtitleOptions.backgroundOpacity}`,
 								boxborderw: subtitleOptions.backgroundPadding,
@@ -113,19 +160,25 @@ export async function combineClips(videos) {
 							},
 							outputs: `[v${i}5]`,
 						},
-					]),
-					// all the individual filters are done, concatenate the clips
-					{
-						inputs: videos.map((video, i) => `[v${i}5][${i}:1]`), // final [v{i}x] video streams, and the original audio streams
-						filter: "concat",
-						options: {
-							n: videos.length,
-							v: 1,
-							a: 1,
-						},
-						outputs: ["[v]", "[a]"],
+					])
+					.flat(),
+				// all the individual filters are done, concatenate the clips
+				{
+					inputs: videos.map((video, i) => `[v${i}5][${i}:1]`), // final [v{i}x] video streams, and the original audio streams
+					filter: "concat",
+					options: {
+						n: videos.length,
+						v: 1,
+						a: 1,
 					},
-				],
+					outputs: ["[v]", "[a]"],
+				},
+			];
+
+			console.log("filters", filters);
+
+			proc = proc.complexFilter(
+				filters,
 				["[v]", "[a]"] // we want to use these as the final streams.
 			);
 

@@ -1,5 +1,6 @@
 import React, { createContext, FunctionComponent, useContext } from "react";
 import axios from "axios";
+import qs from "qs";
 import MessageContext from "./MessageContext";
 
 type ApiCallParameters = {
@@ -23,6 +24,9 @@ export const ApiStore: FunctionComponent = ({ children }) => {
 		try {
 			const res = await axios.get(url, {
 				params: parameters,
+				paramsSerializer: (params) => {
+					return qs.stringify(params);
+				},
 			});
 
 			return res.data.data;

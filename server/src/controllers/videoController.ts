@@ -17,7 +17,7 @@ export async function getVideos(clipInfos) {
 
 			if (fs.existsSync(clip.filename)) return;
 
-			if (clip.source == "mongo") {
+			if (clip.source != "twitch") {
 				// got the clip from mongo, check if it's downloaded in S3 already
 				const video = await s3.getVideo(clip.slug);
 				if (video) {
@@ -32,8 +32,10 @@ export async function getVideos(clipInfos) {
 			const filename = await downloadVideo(clip.info.url, clip.filename);
 			console.log(`Downloaded video '${clip.slug}' from Twitch`);
 
-			await s3.storeVideo(clip.slug, filename);
-			console.log(`Uploaded video '${clip.slug}' to S3`);
+			// don't wait to store the video, just do it in the background
+			s3.storeVideo(clip.slug, filename).then(() =>
+				console.log(`Uploaded video '${clip.slug}' to S3`)
+			);
 		})
 	);
 
@@ -56,7 +58,7 @@ export async function makeVideo(req, res) {
 	const mergedFilename = await combineClips(videos);
 	console.log("Done merging");
 
-	await res.sendFile(mergedFilename);
+	res.sendFile(mergedFilename);
 
 	// delete videos
 	for await (const video of videos) {

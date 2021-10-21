@@ -28,6 +28,8 @@ import TwitchClipCard from "../../components/TwitchClip/TwitchClip";
 import Loader from "../../components/Loader/Loader";
 
 import "./Home.scss";
+import axios from "axios";
+import { Link } from "react-router-dom";
 
 interface ClipsListProps {
 	clips: TwitchClip[];
@@ -124,6 +126,8 @@ const Clips = (): ReactElement => {
 	const [clips, setClips] = useState<TwitchClip[]>([]);
 	const [clipUrl, setClipUrl] = useState("");
 	const [adding, setAdding] = useState(false);
+	const [video, setVideo] = useState("");
+	const [makingVideo, setMakingVideo] = useState(false);
 
 	const { setMessage } = useContext(MessageContext);
 	const { get } = useContext(ApiContext);
@@ -155,21 +159,38 @@ const Clips = (): ReactElement => {
 	};
 
 	const removeClip = (clipId: string) => {
-		console.log("Removing", clipId);
 		setClips((curClips) => curClips.filter((clip) => clip.id != clipId));
 	};
 
 	const createVideo = async () => {
-		// const urls = clips.map((clip) => clip.url);
-		// console.log(urls);
-		// const res = await get("/api/makeVideo", {
-		// 	clips: urls,
-		// });
-		// console.log(res);
+		if (makingVideo) return;
+
+		setMakingVideo(true);
+
+		const urls = clips.map((clip) => clip.url);
+
+		const res = await axios.get(
+			`/api/makeVideo?clips=${JSON.stringify(urls)}`,
+			{
+				responseType: "blob",
+			}
+		);
+
+		const blob = res.data;
+		const blobUrl = window.URL.createObjectURL(blob);
+
+		setVideo(blobUrl);
+		setMakingVideo(false);
 	};
 
 	return (
-		<>
+		<div className="clips-page">
+			<h1>New clip compilation</h1>
+			<p className="muted">
+				Provide a list of Twitch clip URLs to be combined into a highlights
+				video.
+			</p>
+
 			<h3>Clips{clips.length != 0 && <span> - {clips.length}</span>}</h3>
 
 			<form
@@ -206,23 +227,37 @@ const Clips = (): ReactElement => {
 			<br />
 
 			{clips.length != 0 && (
-				<Button variant="contained" onClick={() => createVideo()}>
+				<Button
+					variant="contained"
+					onClick={() => createVideo()}
+					disabled={makingVideo}
+				>
 					Create video
 				</Button>
 			)}
-		</>
+
+			{video && (
+				<div className="video-container">
+					<h2>Your generated video</h2>
+
+					<video className="video" controls>
+						<source src={video} type="video/mp4" />
+					</video>
+
+					<br />
+
+					<a href={video} download="merged.mp4">
+						<Button variant="contained">Download</Button>
+					</a>
+				</div>
+			)}
+		</div>
 	);
 };
 
 const Home = (): ReactElement => {
 	return (
 		<div>
-			<h1>New clip compilation</h1>
-			<p className="muted">
-				Provide a list of Twitch clip URLs to be combined into a highlights
-				video.
-			</p>
-
 			<Clips />
 		</div>
 	);

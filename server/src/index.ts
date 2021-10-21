@@ -10,12 +10,12 @@ import db from "./services/mongo";
 import s3 from "./services/s3";
 import apiRouter from "./routes/api";
 import statusCodes from "./util/statusCodes";
+import redis from "./services/redis";
 
 // setup
 const app = express();
 const port = process.env.PORT || 3001;
 const env = process.env.NODE_ENV || "development";
-  
 
 // middlewares
 app.use(express.urlencoded({ extended: true }));
@@ -58,6 +58,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 		? err.message || err
 		: "An unexpected error has occurred, please try again later";
 
+	console.log(err);
+
 	res.status(errStatus).json({
 		error: true,
 		message: errMessage,
@@ -71,6 +73,10 @@ async function start() {
 	// create clip folders
 	await fs.ensureDir(path.join(__dirname, "../clips/downloaded"));
 	await fs.ensureDir(path.join(__dirname, "../clips/merged"));
+
+	// connect to Redis
+	await redis.connect();
+	console.log("Connected to Redis");
 
 	// connect to MongoDB
 	await db.connect();
