@@ -26,8 +26,14 @@ COPY server ./
 RUN npm run build
 
 # ------------ Client+Server ------------ #
-FROM node:lts-alpine
+FROM node:lts-slim
 WORKDIR /app
+
+# Install dependencies
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y ffmpeg
+RUN apt-get install -y youtube-dl
 
 # Copy builds
 COPY --from=server-build /app/server/node_modules node_modules

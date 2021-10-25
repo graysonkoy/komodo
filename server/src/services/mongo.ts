@@ -5,6 +5,8 @@ class Database {
 	db: Db;
 
 	connect = async () => {
+		if (!process.env.DB_URI) throw "No MongoDB URI specified";
+
 		this.client = new MongoClient(process.env.DB_URI);
 
 		await this.client.connect();

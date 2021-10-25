@@ -4,7 +4,7 @@ class Redis {
 	client: RedisClient;
 
 	connect = async () => {
-		this.client = createClient();
+		this.client = createClient(process.env.REDIS_URI);
 		this.client.on("error", (error) => {
 			console.log("ERROR", error);
 		});
