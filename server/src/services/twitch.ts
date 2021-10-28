@@ -39,6 +39,8 @@ export async function getGameId(gameName) {
 		name: gameName,
 	});
 
+	if (data.length == 0) throw "Game not found";
+
 	return data[0].id;
 }
 
@@ -49,6 +51,8 @@ export async function getStreamerId(streamerName) {
 		login: streamerName,
 	});
 
+	if (data.length == 0) throw "Streamer not found";
+
 	return data[0].id;
 }
 
@@ -56,18 +60,13 @@ export async function getTopClips(gameName, streamerName, startDate, clips) {
 	const gameId = await getGameId(gameName);
 	const streamerId = await getStreamerId(streamerName);
 
-	try {
-		const data = await twitch("clips", {
-			game_id: gameId,
-			broadcaster_id: streamerId,
-			started_at: startDate,
-			ended_at: new Date(),
-			first: clips,
-		});
+	const data = await twitch("clips", {
+		game_id: gameId,
+		broadcaster_id: streamerId,
+		started_at: startDate,
+		ended_at: new Date(),
+		first: clips,
+	});
 
-		return data;
-	} catch (e) {
-		console.log(e);
-		throw e;
-	}
+	return data;
 }

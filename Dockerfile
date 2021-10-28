@@ -33,7 +33,8 @@ WORKDIR /app
 RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
-RUN apt-get install -y youtube-dl
+RUN apt-get install -y python3-pip
+RUN pip3 install --upgrade yt-dlp
 
 # Copy builds
 COPY --from=server-build /app/server/node_modules node_modules

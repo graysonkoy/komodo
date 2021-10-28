@@ -6,14 +6,12 @@ import { combineClips } from "../services/video";
 import { downloadVideo } from "../services/youtubeDl";
 import validateQuery from "../util/validateQuery";
 import s3 from "../services/s3";
+import { clipsFolder } from "../index";
 
 export async function getVideos(clipInfos) {
 	await Promise.all(
 		clipInfos.map(async (clip) => {
-			clip.filename = path.join(
-				__dirname,
-				`../../clips/downloaded/${clip.slug}.mp4`
-			);
+			clip.filename = path.join(clipsFolder, `downloaded/${clip.slug}.mp4`);
 
 			if (fs.existsSync(clip.filename)) return;
 
@@ -29,11 +27,11 @@ export async function getVideos(clipInfos) {
 
 			// didn't get the video from S3, download & store it
 			console.log(`Downloading video '${clip.slug}' from Twitch`);
-			const filename = await downloadVideo(clip.info.url, clip.filename);
+			await downloadVideo(clip.info.url, clip.filename);
 			console.log(`Downloaded video '${clip.slug}' from Twitch`);
 
 			// don't wait to store the video, just do it in the background
-			s3.storeVideo(clip.slug, filename).then(() =>
+			s3.storeVideo(clip.slug, clip.filename).then(() =>
 				console.log(`Uploaded video '${clip.slug}' to S3`)
 			);
 		})

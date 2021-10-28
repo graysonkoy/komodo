@@ -7,6 +7,10 @@ services:
     ports:
       - published: 80
         target: 8000
+    links:
+      - redis
+    env_file:
+      - server/.env
 
   redis:
     image: redis:alpine

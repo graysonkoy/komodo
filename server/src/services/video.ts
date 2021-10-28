@@ -3,6 +3,7 @@ import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 
 import randomString from "../util/randomString";
+import { clipsFolder } from "../index";
 
 function slash(path) {
 	const isExtendedLengthPath = /^\\\\\?\\/.test(path);
@@ -19,7 +20,7 @@ export async function combineClips(videos) {
 	if (videos.length == 0) throw "No clips provided";
 
 	const id = randomString();
-	const mergedFilename = path.join(__dirname, `../../clips/merged/${id}.mp4`);
+	const mergedFilename = path.join(clipsFolder, `merged/${id}.mp4`);
 
 	const videoOptions = {
 		resolution: "1280:720",

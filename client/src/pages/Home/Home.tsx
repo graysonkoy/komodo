@@ -166,6 +166,7 @@ const Clips = (): ReactElement => {
 		if (makingVideo) return;
 
 		setMakingVideo(true);
+		setVideo("");
 
 		const urls = clips.map((clip) => clip.url);
 

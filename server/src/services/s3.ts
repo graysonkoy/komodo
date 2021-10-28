@@ -29,6 +29,21 @@ class S3 {
 			.promise();
 	};
 
+	uploadStream = async (slug, stream) => {
+		await this.s3
+			.upload(
+				{
+					Bucket: process.env.S3_BUCKET_NAME,
+					Key: slug,
+					Body: stream,
+				},
+				{
+					partSize: 1024 * 1024 * 64, // 64 MB in bytes
+				}
+			)
+			.promise();
+	};
+
 	getVideo = async (slug) => {
 		try {
 			const result = await this.s3

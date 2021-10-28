@@ -52,7 +52,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 	// general
-	const dev = req.app.get("env") === "development";
+	// const dev = req.app.get("env") === "development";
+	const dev = true;
+
 	const errStatus = err.status || statusCodes.INTERNAL_SERVER_ERROR;
 	const errMessage = dev
 		? err.message || err
@@ -66,13 +68,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 	});
 });
 
+export const clipsFolder = path.join(__dirname, "clips");
+
 async function start() {
 	// clear clips
-	await fs.remove(path.join(__dirname, "../clips"));
+	await fs.remove(clipsFolder);
 
 	// create clip folders
-	await fs.ensureDir(path.join(__dirname, "../clips/downloaded"));
-	await fs.ensureDir(path.join(__dirname, "../clips/merged"));
+	await fs.ensureDir(path.join(clipsFolder, "downloaded"));
+	await fs.ensureDir(path.join(clipsFolder, "merged"));
 
 	// connect to Redis
 	await redis.connect();
