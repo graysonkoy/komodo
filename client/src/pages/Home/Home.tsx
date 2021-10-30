@@ -170,17 +170,24 @@ const Clips = (): ReactElement => {
 
 		const urls = clips.map((clip) => clip.url);
 
-		const res = await axios.get(
-			`/api/makeVideo?clips=${JSON.stringify(urls)}`,
-			{
-				responseType: "blob",
-			}
-		);
+		try {
+			const res = await axios.get(
+				`/api/makeVideo?clips=${JSON.stringify(urls)}`,
+				{
+					responseType: "blob",
+				}
+			);
 
-		const blob = res.data;
-		const blobUrl = window.URL.createObjectURL(blob);
+			const blob = res.data;
+			const blobUrl = window.URL.createObjectURL(blob);
 
-		setVideo(blobUrl);
+			console.log(video);
+
+			setVideo(blobUrl);
+		} catch (e) {
+			console.log("Failed to generate video", e);
+		}
+
 		setMakingVideo(false);
 	};
 
@@ -236,6 +243,8 @@ const Clips = (): ReactElement => {
 					Create video
 				</Button>
 			)}
+
+			{makingVideo && <Loader message="Making video..." />}
 
 			{video && (
 				<div className="video-container">

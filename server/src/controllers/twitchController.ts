@@ -92,7 +92,6 @@ export async function getClips(req, res) {
 	else if (gameName && streamerName)
 		throw "Only a gameName or a streamerName can be provided, not both.";
 
-	// todo: remove this, use validator
 	let startDate;
 	if (startDateString) {
 		if (!Date.parse(startDateString)) throw "Invalid start date";

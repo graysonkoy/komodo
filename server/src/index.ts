@@ -3,7 +3,7 @@ import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
-import fs from "fs-extra";
+import AWS from "aws-sdk";
 import "express-async-errors";
 
 import db from "./services/mongo";
@@ -11,6 +11,7 @@ import s3 from "./services/s3";
 import apiRouter from "./routes/api";
 import statusCodes from "./util/statusCodes";
 import redis from "./services/redis";
+import lambda from "./services/lambda";
 
 // setup
 const app = express();
@@ -60,7 +61,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 		? err.message || err
 		: "An unexpected error has occurred, please try again later";
 
-	console.log(err);
+	console.log(err.message, err.trace);
 
 	res.status(errStatus).json({
 		error: true,
@@ -71,12 +72,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 export const clipsFolder = path.join(__dirname, "clips");
 
 async function start() {
-	// clear clips
-	await fs.remove(clipsFolder);
-
-	// create clip folders
-	await fs.ensureDir(path.join(clipsFolder, "downloaded"));
-	await fs.ensureDir(path.join(clipsFolder, "merged"));
+	AWS.config.update({ region: process.env.AWS_DEFAULT_REGION });
 
 	// connect to Redis
 	await redis.connect();
@@ -89,6 +85,10 @@ async function start() {
 	// connect to S3
 	await s3.connect();
 	console.log("Connected to S3");
+
+	// connect to Lambda
+	await lambda.connect();
+	console.log("Connected to Lambda");
 
 	// start the server
 	app

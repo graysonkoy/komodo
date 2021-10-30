@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import fs from "fs-extra";
+import stream from "stream";
 
 class S3 {
 	s3: AWS.S3;
@@ -8,48 +8,56 @@ class S3 {
 		// Connect to S3
 		this.s3 = await new AWS.S3({ apiVersion: "2006-03-01" });
 
-		// Create S3 bucket
-		await this.s3
-			.createBucket({
-				Bucket: process.env.S3_BUCKET_NAME,
-			})
-			.promise()
-			.catch((e) => console.log(e));
+		// Create S3 buckets
+		const makeBucket = async (bucketName) =>
+			await this.s3
+				.createBucket({
+					Bucket: bucketName,
+				})
+				.promise()
+				.catch((e) => {
+					if (e.code == "BucketAlreadyOwnedByYou") return;
+					console.log(e);
+				});
+
+		makeBucket(process.env.S3_BUCKET_NAME_CLIPS);
+		makeBucket(process.env.S3_BUCKET_NAME_MERGED);
 	};
 
-	storeVideo = async (slug, filename) => {
-		const video = await fs.readFile(filename);
+	uploadStream = async (slug, readStream) => {
+		const writeStream = new stream.PassThrough();
+		readStream.pipe(writeStream);
 
 		await this.s3
 			.upload({
-				Bucket: process.env.S3_BUCKET_NAME,
+				Bucket: process.env.S3_BUCKET_NAME_CLIPS,
 				Key: slug,
-				Body: video,
+				Body: writeStream,
 			})
 			.promise();
 	};
 
-	uploadStream = async (slug, stream) => {
-		await this.s3
-			.upload(
-				{
-					Bucket: process.env.S3_BUCKET_NAME,
-					Key: slug,
-					Body: stream,
-				},
-				{
-					partSize: 1024 * 1024 * 64, // 64 MB in bytes
-				}
-			)
-			.promise();
+	keyExists = async (bucket, key) => {
+		try {
+			await this.s3
+				.headObject({
+					Bucket: bucket,
+					Key: key,
+				})
+				.promise();
+
+			return true;
+		} catch (e) {
+			return false;
+		}
 	};
 
-	getVideo = async (slug) => {
+	getFile = async (bucket, key) => {
 		try {
 			const result = await this.s3
 				.getObject({
-					Bucket: process.env.S3_BUCKET_NAME,
-					Key: slug,
+					Bucket: bucket,
+					Key: key,
 				})
 				.promise();
 
@@ -58,6 +66,30 @@ class S3 {
 			return null;
 		}
 	};
+
+	streamFile = (bucket, key) => {
+		return this.s3
+			.getObject({
+				Bucket: bucket,
+				Key: key,
+			})
+			.createReadStream();
+	};
+
+	clipExists = async (slug) =>
+		this.keyExists(process.env.S3_BUCKET_NAME_CLIPS, slug);
+
+	mergedVideoExists = async (mergedName) =>
+		this.keyExists(process.env.S3_BUCKET_NAME_MERGED, mergedName);
+
+	getClip = async (slug) =>
+		this.getFile(process.env.S3_BUCKET_NAME_CLIPS, slug);
+
+	getMergedVideo = async (mergedName) =>
+		this.getFile(process.env.S3_BUCKET_NAME_MERGED, mergedName);
+
+	streamMergedVideo = (mergedName) =>
+		this.streamFile(process.env.S3_BUCKET_NAME_MERGED, mergedName);
 }
 
 const s3 = new S3();
