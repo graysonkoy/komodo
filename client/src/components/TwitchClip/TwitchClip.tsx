@@ -47,13 +47,17 @@ const TwitchClipCard = ({
 				</h3>
 			</CardContent>
 
-			<div style={{ flexGrow: 1 }} />
+			{/* <div style={{ flexGrow: 1 }} />
 
 			<CardActions>
-				<Button size="small" onClick={() => onRemove(clip.id)}>
+				<Button
+					size="small"
+					className="remove-button"
+					onClick={() => onRemove(clip.id)}
+				>
 					Remove
 				</Button>
-			</CardActions>
+			</CardActions> */}
 		</Card>
 	);
 };

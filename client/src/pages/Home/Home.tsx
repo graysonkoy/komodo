@@ -152,7 +152,10 @@ const Clips = (): ReactElement => {
 				setClips((curClips) => [...curClips, newClip]);
 			}
 		} catch (e) {
-			//
+			setMessage({
+				type: "error",
+				message: "Couldn't add clip",
+			});
 		}
 
 		setAdding(false);
@@ -181,11 +184,12 @@ const Clips = (): ReactElement => {
 			const blob = res.data;
 			const blobUrl = window.URL.createObjectURL(blob);
 
-			console.log(video);
-
 			setVideo(blobUrl);
 		} catch (e) {
-			console.log("Failed to generate video", e);
+			setMessage({
+				type: "error",
+				message: "Failed to generate video, please try again later",
+			});
 		}
 
 		setMakingVideo(false);
